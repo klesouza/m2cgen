@@ -25,6 +25,7 @@ class CSharpInterpreter(ImperativeToCodeInterpreter,
     power_function_name = "Pow"
     sqrt_function_name = "Sqrt"
     tanh_function_name = "Tanh"
+    set_contains_function_name = "Contains"
 
     with_log1p_expr = False
 
@@ -47,6 +48,8 @@ class CSharpInterpreter(ImperativeToCodeInterpreter,
 
         with self._cg.namespace_definition(self.namespace):
             with self._cg.class_definition(self.class_name):
+                for static_def in self.static_declarations:
+                    self._cg.add_code_line(static_def)
                 with self._cg.method_definition(
                         name=method_name,
                         args=args,
@@ -65,10 +68,17 @@ class CSharpInterpreter(ImperativeToCodeInterpreter,
                         os.path.dirname(__file__), "log1p.cs")
                     self._cg.add_code_lines(utils.get_file_content(filename))
 
+                for _, item_set in self.static_declarations:
+                    self._cg.add_code_line(item_set)
+
+        self._cg.add_dependency("System.Collections.Generic")
         if self.with_math_module:
             self._cg.add_dependency("System.Math")
 
         return self._cg.finalize_and_get_generated_code()
+
+    # def interpret_contains_int_expr(self, expr, **kwargs):
+    #     pass
 
     def interpret_log1p_expr(self, expr, **kwargs):
         self.with_log1p_expr = True

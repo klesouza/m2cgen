@@ -121,9 +121,9 @@ class ModelTrainer:
                 dataset_name, test_fraction)
         return cls._class_instances[key]
 
-    def __call__(self, estimator):
-        fitted_estimator = estimator.fit(self.X_train, self.y_train)
-
+    def __call__(self, estimator, **kwargs):
+        fitted_estimator = estimator.fit(self.X_train, self.y_train, **kwargs)
+        
         if isinstance(estimator, (LinearClassifierMixin, SVC, NuSVC,
                                   LightBaseClassifier)):
             y_pred = estimator.decision_function(self.X_test)

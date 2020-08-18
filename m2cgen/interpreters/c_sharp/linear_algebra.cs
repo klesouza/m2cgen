@@ -12,3 +12,6 @@ private static double[] MulVectorNumber(double[] v1, double num) {
     }
     return result;
 }
+private static bool Contains(HashSet<int> v1, double featureRef) {
+    return v1.Contains((int) featureRef);
+}

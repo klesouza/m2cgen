@@ -490,3 +490,37 @@ namespace ML {
 
     interpreter = CSharpInterpreter()
     utils.assert_code_equal(interpreter.interpret(expr), expected_code)
+
+def test_contains_expr():
+    expected_code = """
+using static System.Collections.Generic;
+namespace ML {
+    public static class Model {
+        public static double Score(double[] input) {
+            return Contains(var_1, input[0]);
+        }
+        private static double[] AddVectors(double[] v1, double[] v2) {
+            double[] result = new double[v1.Length];
+            for (int i = 0; i < v1.Length; ++i) {
+                result[i] = v1[i] + v2[i];
+            }
+            return result;
+        }
+        private static double[] MulVectorNumber(double[] v1, double num) {
+            double[] result = new double[v1.Length];
+            for (int i = 0; i < v1.Length; ++i) {
+                result[i] = v1[i] * num;
+            }
+            return result;
+        }
+        private static bool Contains(HashSet<int> v1, double featureRef) {
+            return v1.Contains((int) featureRef);
+        }
+        static HashSet<int> var_1 = new HashSet<int>() { 0 };
+    }
+}
+"""
+    expr = ast.ContainsIntExpr([0], ast.FeatureRef(0))
+    interpreter = CSharpInterpreter()
+    r = interpreter.interpret(expr)
+    print(r)

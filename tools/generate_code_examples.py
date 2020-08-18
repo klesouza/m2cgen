@@ -100,6 +100,11 @@ EXAMPLE_MODELS = [
         utils.get_classification_model_trainer(),
     ),
     (
+        "classification_categorical", "lightgbm",
+        lightgbm.LGBMClassifier(**LIGHT_GBM_PARAMS),
+        lambda x: utils.get_classification_model_trainer()(x, categorical_feature=[0]),
+    ),
+    (
         "regression", "svm",
         svm.NuSVR(nu=0.1),
         utils.get_regression_model_trainer(),
@@ -123,6 +128,8 @@ if __name__ == "__main__":
 
     prod = itertools.product(EXAMPLE_LANGUAGES, EXAMPLE_MODELS)
     for (language, exporter, file_ext), (mtype, mname, model, trainer) in prod:
+        if mtype != "classification_categorical":
+            continue
         trainer(model)
 
         # Make sure path exists, create if doesn't.

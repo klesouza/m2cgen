@@ -100,6 +100,36 @@ def test_regression():
 
     assert utils.cmp_exprs(actual, expected)
 
+def test_regression_categorical():
+    estimator = lightgbm.LGBMRegressor(n_estimators=2, random_state=1,
+                                       max_depth=1, 
+                                       min_data_per_group=1000)
+    X = np.column_stack(( np.random.choice([0,1,2,3,4,5], size=[10000, 1]), np.random.choice([0,1,2,3], size=[10000,1])))
+    y = np.random.normal(size=[10000, 1])
+    estimator.fit(X, y, categorical_feature=[1])
+    
+    assembler = assemblers.LightGBMModelAssembler(estimator)
+    actual = assembler.assemble()
+
+    expected = ast.BinNumExpr(
+        ast.IfExpr(
+            ast.CompExpr(
+                ast.FeatureRef(5),
+                ast.NumVal(6.918),
+                ast.CompOpType.GT),
+            ast.NumVal(24.011454621684155),
+            ast.NumVal(22.289277544391084)),
+        ast.IfExpr(
+            ast.CompExpr(
+                ast.FeatureRef(12),
+                ast.NumVal(9.63),
+                ast.CompOpType.GT),
+            ast.NumVal(-0.49461212269771115),
+            ast.NumVal(0.7174324413014594)),
+        ast.BinNumOpType.ADD)
+
+    assert utils.cmp_exprs(actual, expected)
+
 
 def test_regression_random_forest():
     estimator = lightgbm.LGBMRegressor(boosting_type="rf", n_estimators=2,
