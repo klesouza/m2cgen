@@ -57,3 +57,6 @@ class CSharpCodeGenerator(CLikeCodeGenerator):
 
     def add_dependency(self, dep, modifier="static"):
         self.prepend_code_line(f"using {modifier} {dep};")
+
+    function_definition = method_definition
+    

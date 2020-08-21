@@ -8,7 +8,8 @@ from m2cgen.interpreters.c_sharp.code_generator import CSharpCodeGenerator
 
 
 class CSharpInterpreter(ImperativeToCodeInterpreter,
-                        mixins.LinearAlgebraMixin):
+                        mixins.LinearAlgebraMixin,
+                        mixins.SubroutinesMixin):
 
     supported_bin_vector_ops = {
         ast.BinNumOpType.ADD: "AddVectors",
@@ -36,46 +37,39 @@ class CSharpInterpreter(ImperativeToCodeInterpreter,
         self.indent = indent
         self.function_name = function_name
 
-        cg = CSharpCodeGenerator(indent=indent)
         super().__init__(cg, *args, **kwargs)
 
     def interpret(self, expr):
-        self._cg.reset_state()
-        self._reset_reused_expr_cache()
+        top_cg = self.create_code_generator()
+
 
         method_name = self.function_name
         args = [(True, self._feature_array_name)]
 
-        with self._cg.namespace_definition(self.namespace):
-            with self._cg.class_definition(self.class_name):
-                for static_def in self.static_declarations:
-                    self._cg.add_code_line(static_def)
-                with self._cg.method_definition(
-                        name=method_name,
-                        args=args,
-                        is_vector_output=expr.output_size > 1,
-                        modifier="public"):
-                    last_result = self._do_interpret(expr)
-                    self._cg.add_return_statement(last_result)
-
+        with top_cg.namespace_definition(self.namespace):
+            with top_cg.class_definition(self.class_name):
+                
+                self.enqueue_subroutine(self.function_name, expr)
+                self.process_subroutine_queue(top_cg)
+                
                 if self.with_linear_algebra:
                     filename = os.path.join(
                         os.path.dirname(__file__), "linear_algebra.cs")
-                    self._cg.add_code_lines(utils.get_file_content(filename))
+                    top_cg.add_code_lines(utils.get_file_content(filename))
 
                 if self.with_log1p_expr:
                     filename = os.path.join(
                         os.path.dirname(__file__), "log1p.cs")
-                    self._cg.add_code_lines(utils.get_file_content(filename))
+                    top_cg.add_code_lines(utils.get_file_content(filename))
 
                 for _, item_set in self.static_declarations:
-                    self._cg.add_code_line(item_set)
+                    top_cg.add_code_line(item_set)
 
-        self._cg.add_dependency("System.Collections.Generic")
+        top_cg.add_dependency("System.Collections.Generic")
         if self.with_math_module:
-            self._cg.add_dependency("System.Math")
+            top_cg.add_dependency("System.Math")
 
-        return self._cg.finalize_and_get_generated_code()
+        return top_cg.finalize_and_get_generated_code()
 
     # def interpret_contains_int_expr(self, expr, **kwargs):
     #     pass
@@ -83,3 +77,7 @@ class CSharpInterpreter(ImperativeToCodeInterpreter,
     def interpret_log1p_expr(self, expr, **kwargs):
         self.with_log1p_expr = True
         return super().interpret_log1p_expr(expr, **kwargs)
+
+    
+    def create_code_generator(self):
+        return CSharpCodeGenerator(self.indent)
