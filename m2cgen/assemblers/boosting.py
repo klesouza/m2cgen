@@ -345,7 +345,7 @@ class LightGBMModelAssembler(BaseTreeBoostingAssembler):
 def _create_categorical_expr(tree, feature_ref):
     # LightGBM threshold here is a double pipe deliminated string
     categories = [x for x in tree["threshold"].split('||')]
-    return ast.ContainsIntExpr(categories, feature_ref)
+    return ast.ContainsIntExpr(ast.NumVal(categories), feature_ref)
 
 
 def _split_estimator_params_by_classes(values, n_classes, params_seq_len):

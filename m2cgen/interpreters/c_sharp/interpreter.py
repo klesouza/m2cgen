@@ -29,6 +29,9 @@ class CSharpInterpreter(ImperativeToCodeInterpreter,
     set_contains_function_name = "Contains"
 
     with_log1p_expr = False
+    
+    ast_size_check_frequency = 100
+    ast_size_per_subroutine_threshold = 4600
 
     def __init__(self, namespace="ML", class_name="Model", indent=4,
                  function_name="Score", *args, **kwargs):
@@ -37,14 +40,13 @@ class CSharpInterpreter(ImperativeToCodeInterpreter,
         self.indent = indent
         self.function_name = function_name
 
-        super().__init__(cg, *args, **kwargs)
+        super().__init__(None, *args, **kwargs)
 
     def interpret(self, expr):
         top_cg = self.create_code_generator()
 
 
         method_name = self.function_name
-        args = [(True, self._feature_array_name)]
 
         with top_cg.namespace_definition(self.namespace):
             with top_cg.class_definition(self.class_name):
@@ -62,10 +64,10 @@ class CSharpInterpreter(ImperativeToCodeInterpreter,
                         os.path.dirname(__file__), "log1p.cs")
                     top_cg.add_code_lines(utils.get_file_content(filename))
 
-                for _, item_set in self.static_declarations:
+                for _, item_set in self.static_declarations.items():
                     top_cg.add_code_line(item_set)
 
-        top_cg.add_dependency("System.Collections.Generic")
+        top_cg.add_dependency("System.Collections.Generic", modifier="")
         if self.with_math_module:
             top_cg.add_dependency("System.Math")
 

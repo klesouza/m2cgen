@@ -361,6 +361,17 @@ class IfExpr(CtrlExpr):
         return hash((self.test, self.body, self.orelse))
 
 
+class ContainsIntExpr(CtrlExpr):
+    def __init__(self, collection, item, to_reuse=False):
+        self.to_reuse = to_reuse
+        self.item = item
+        self.collection = collection
+
+    def __str__(self):
+        args = ",".join([str(self.item), str(self.collection), "to_reuse=" + str(self.to_reuse)])
+        return "ContainsIntExpr(" + args + ")"
+
+
 TOTAL_NUMBER_OF_EXPRESSIONS = len(getmembers(modules[__name__], isclass))
 
 
@@ -371,6 +382,7 @@ NESTED_EXPRS_MAPPINGS = [
     (IfExpr, lambda e: [e.test, e.body, e.orelse]),
     ((AbsExpr, ExpExpr, IdExpr, LogExpr, Log1pExpr, SqrtExpr, TanhExpr),
      lambda e: [e.expr]),
+    (ContainsIntExpr, lambda e: [e.collection, e.item]),
 ]
 
 
@@ -401,14 +413,3 @@ def _eq_bin_exprs(expr_one, expr_two, expected_type):
             expr_one.left == expr_two.left and
             expr_one.right == expr_two.right and
             expr_one.op == expr_two.op)
-
-
-class ContainsIntExpr(CtrlExpr):
-    def __init__(self, collection, item, to_reuse=False):
-        self.to_reuse = to_reuse
-        self.item = item
-        self.collection = collection
-
-    def __str__(self):
-        args = ",".join([str(self.item), str(self.collection), "to_reuse=" + str(self.to_reuse)])
-        return "ContainsIntExpr(" + args + ")"
